@@ -1,0 +1,10 @@
+package: myhouse-service-rtl_433
+revision: 1
+version: development
+git: myhouse-project/myhouse-service-rtl_433
+modules:
+  - service/rtl_433
+default_config:
+  - service/rtl_433:
+      command: /usr/local/bin/rtl_433 -R 71
+      
