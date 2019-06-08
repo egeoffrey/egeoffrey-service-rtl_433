@@ -20,12 +20,12 @@ import json
 import subprocess
 import shlex
 
-from sdk.module.service import Service
-from sdk.module.helpers.message import Message
+from sdk.python.module.service import Service
+from sdk.python.module.helpers.message import Message
 
-import sdk.utils.datetimeutils
-import sdk.utils.command
-import sdk.utils.exceptions as exception
+import sdk.python.utils.datetimeutils
+import sdk.python.utils.command
+import sdk.python.utils.exceptions as exception
 
 class Rtl_433(Service):
     # What to do when initializing
@@ -44,7 +44,7 @@ class Rtl_433(Service):
         # request all sensors' configuration so to filter sensors of interest
         self.add_configuration_listener("sensors/#")
         # kill rtl_433 if running
-        sdk.utils.command.run("killall rtl_433")
+        sdk.python.utils.command.run("killall rtl_433")
         # run rtl_433 and handle the output
         command = self.config['command']+" "+command_arguments
         self.log_debug("running command "+command)
