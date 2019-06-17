@@ -10,8 +10,8 @@
 # INBOUND: 
 # OUTBOUND:
 # - controller/hub IN: 
-#   required: search, measure
-#   optional: 
+#   required: search
+#   optional: measure
 
 import datetime
 import json
@@ -21,6 +21,7 @@ import subprocess
 import shlex
 
 from sdk.python.module.service import Service
+from sdk.python.utils.datetimeutils import DateTimeUtils
 from sdk.python.module.helpers.message import Message
 
 import sdk.python.utils.datetimeutils
@@ -37,6 +38,7 @@ class Rtl_433(Service):
         # helpers
         self.date = None
         # require configuration before starting up
+        self.add_configuration_listener("house", True)
         self.add_configuration_listener(self.fullname, True)
         
     # What to do when running
@@ -46,7 +48,7 @@ class Rtl_433(Service):
         # kill rtl_433 if running
         sdk.python.utils.command.run("killall rtl_433")
         # run rtl_433 and handle the output
-        command = self.config['command']+" "+command_arguments
+        command = self.config['command']+" "+self.command_arguments
         self.log_debug("running command "+command)
         process = subprocess.Popen(shlex.split(command), stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
         prev_output = ""
@@ -64,16 +66,17 @@ class Rtl_433(Service):
                     if prev_output == output: continue
                     # parse the json output
                     json_output = json.loads(output)
-                except ValueError, e:
-                    # not a valid json, ignoring
+                except Exception,e:
+                    # not json format, ignoring
                     continue
+                self.log_debug("Received: "+str(json_output))
                 # for each registered sensor
                 for sensor_id in self.sensors:
                     sensor = self.sensors[sensor_id]
                     # check if the output matches the search string
-                    search_json = json.loads(sensor["search"])
+                    search = sensor["search"]
                     found = True
-                    for key, value in search_json.iteritems():
+                    for key, value in search.iteritems():
                         # check every key/value pair
                         if key not in json_output: found = False
                         if str(value) != str(json_output[key]): found = False
@@ -86,10 +89,11 @@ class Rtl_433(Service):
                     if "time" in json_output:
                         date = datetime.datetime.strptime(json_output["time"],"%Y-%m-%d %H:%M:%S")
                         message.set("timestamp", self.date.timezone(self.date.timezone(int(time.mktime(date.timetuple())))))
-                    value = json_output[sensor["measure"]] if sensor["measure"] in json_output else 1
+                    value = json_output[sensor["measure"]] if "measure" in sensor and sensor["measure"] in json_output else 1
                     message.set("value", value)
                     # send the measure to the controller
                     self.send(message)
+                    self.log_debug("Matched sensor "+sensor_id+" with value "+str(value))
                 # keep track of the last line of output
                 prev_output = output
 
@@ -124,7 +128,7 @@ class Rtl_433(Service):
                 # filter in only relevant sensors
                 if "service" not in sensor or sensor["service"]["name"] != self.name or sensor["service"]["mode"] != "passive": return
                 configuration = sensor["service"]["configuration"]
-                if not self.is_valid_configuration(["measure", "search"], configuration): return
+                if not self.is_valid_configuration(["search"], configuration): return
                 # keep track of the sensor's configuration
                 self.sensors[sensor_id] = configuration
                 self.log_info("registered sensor "+sensor_id)
