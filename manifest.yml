@@ -1,6 +1,11 @@
 package: myhouse-service-rtl_433
-revision: 3
+revision: 4
 version: development
-git: myhouse-project/myhouse-service-rtl_433
+github: myhouse-project/myhouse-service-rtl_433
+dockerhub: myhouse-project/myhouse-service-rtl_433
+container_config:
+  privileged: true
+description: Interact with an attached RTL-SDR device
+tags: service rtl_433 rtl_sdr
 modules:
   - service/rtl_433
