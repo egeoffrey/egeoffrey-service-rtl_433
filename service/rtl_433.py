@@ -1,7 +1,7 @@
 ### service/rtl_433: interact with an attached RTL-SDR device
 ## HOW IT WORKS: 
 ## DEPENDENCIES:
-# OS: raspi-gpio, python-rpi.gpio
+# OS: rtl_433
 # Python: 
 ## CONFIGURATION:
 # required: command
@@ -10,8 +10,8 @@
 # INBOUND: 
 # OUTBOUND:
 # - controller/hub IN: 
-#   required: search
-#   optional: measure
+#   required: 
+#   optional: filter, measure
 
 import datetime
 import json
@@ -38,13 +38,14 @@ class Rtl_433(Service):
         # helpers
         self.date = None
         # require configuration before starting up
-        self.add_configuration_listener("house", True)
-        self.add_configuration_listener(self.fullname, True)
+        self.config_schema = 1
+        self.add_configuration_listener("house", 1, True)
+        self.add_configuration_listener(self.fullname, "+", True)
         
     # What to do when running
     def on_start(self):
         # request all sensors' configuration so to filter sensors of interest
-        self.add_configuration_listener("sensors/#")
+        self.add_configuration_listener("sensors/#", 1)
         # kill rtl_433 if running
         sdk.python.utils.command.run("killall rtl_433")
         # run rtl_433 and handle the output
@@ -73,14 +74,22 @@ class Rtl_433(Service):
                 # for each registered sensor
                 for sensor_id in self.sensors:
                     sensor = self.sensors[sensor_id]
-                    # check if the output matches the search string
-                    search = sensor["search"]
-                    found = True
-                    for key, value in search.iteritems():
-                        # check every key/value pair
-                        if key not in json_output: found = False
-                        if str(value) != str(json_output[key]): found = False
-                    if not found: continue
+                    # apply the filter if any
+                    if "filter" in sensor:
+                        search = {}
+                        if "&" in sensor["filter"]: key_values = sensor["filter"].split("&")
+                        else: key_values = [sensor["filter"]]
+                        for key_value in key_values:
+                            if "=" not in key_value: continue
+                            key, value = key_value.split("=")
+                            search[key] = value
+                        # check if the output matches the search string
+                        found = True
+                        for key, value in search.iteritems():
+                            # check every key/value pair
+                            if key not in json_output: found = False
+                            if str(value) != str(json_output[key]): found = False
+                        if not found: continue
                     # prepare the message
                     message = Message(self)
                     message.recipient = "controller/hub"
@@ -109,12 +118,14 @@ class Rtl_433(Service):
     # What to do when receiving a new/updated configuration for this module    
     def on_configuration(self,message):
         # we need house timezone
-        if message.args == "house":
-            if not self.is_valid_module_configuration(["timezone"], message.get_data()): return False
+        if message.args == "house" and not message.is_null:
+            if not self.is_valid_configuration(["timezone"], message.get_data()): return False
             self.date = DateTimeUtils(message.get("timezone"))
         # module's configuration
-        if message.args == self.fullname:
-            if not self.is_valid_module_configuration(["command"], message.get_data()): return False
+        if message.args == self.fullname and not message.is_null:
+            if message.config_schema != self.config_schema: 
+                return False
+            if not self.is_valid_configuration(["command"], message.get_data()): return False
             self.config = message.get_data()
         # sensors to register
         elif message.args.startswith("sensors/"):
@@ -128,7 +139,7 @@ class Rtl_433(Service):
                 # filter in only relevant sensors
                 if "service" not in sensor or sensor["service"]["name"] != self.name or sensor["service"]["mode"] != "passive": return
                 configuration = sensor["service"]["configuration"]
-                if not self.is_valid_configuration(["search"], configuration): return
+                if not self.is_valid_configuration(["filter"], configuration): return
                 # keep track of the sensor's configuration
                 self.sensors[sensor_id] = configuration
                 self.log_info("registered sensor "+sensor_id)
