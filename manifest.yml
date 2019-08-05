@@ -4,6 +4,7 @@ container_config:
 description: Interact with an attached RTL-SDR device
 dockerhub: myhouseproject/myhouse-service-rtl_433
 github: myhouse-project/myhouse-service-rtl_433
+icon: broadcast-tower
 manifest_schema: 2
 modules:
 - service/rtl_433:
@@ -20,6 +21,6 @@ modules:
         name: measure
         required: false
 package: myhouse-service-rtl_433
-revision: 6
+revision: 7
 tags: service rtl_433 rtl_sdr
 version: 1.0
