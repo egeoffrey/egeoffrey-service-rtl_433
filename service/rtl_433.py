@@ -35,8 +35,6 @@ class Rtl_433(Service):
         self.command_arguments = "-F json -U"
         # map sensor_id with service's configuration
         self.sensors = {}
-        # helpers
-        self.date = None
         # require configuration before starting up
         self.config_schema = 1
         self.add_configuration_listener("house", 1, True)
@@ -95,9 +93,6 @@ class Rtl_433(Service):
                     message.recipient = "controller/hub"
                     message.command = "IN"
                     message.args = sensor_id
-                    if "time" in json_output:
-                        date = datetime.datetime.strptime(json_output["time"],"%Y-%m-%d %H:%M:%S")
-                        message.set("timestamp", self.date.timezone(self.date.timezone(int(time.mktime(date.timetuple())))))
                     value = json_output[sensor["measure"]] if "measure" in sensor and sensor["measure"] in json_output else 1
                     message.set("value", value)
                     # send the measure to the controller
@@ -117,10 +112,6 @@ class Rtl_433(Service):
 
     # What to do when receiving a new/updated configuration for this module    
     def on_configuration(self,message):
-        # we need house timezone
-        if message.args == "house" and not message.is_null:
-            if not self.is_valid_configuration(["timezone"], message.get_data()): return False
-            self.date = DateTimeUtils(message.get("timezone"))
         # module's configuration
         if message.args == self.fullname and not message.is_null:
             if message.config_schema != self.config_schema: 
