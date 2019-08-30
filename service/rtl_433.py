@@ -118,19 +118,9 @@ class Rtl_433(Service):
                 return False
             if not self.is_valid_configuration(["command"], message.get_data()): return False
             self.config = message.get_data()
-        # sensors to register
-        elif message.args.startswith("sensors/"):
-            sensor_id = message.args.replace("sensors/","")
-            sensor = message.get_data()
-            # a sensor has been deleted
-            if message.is_null:
-                if sensor_id in self.sensors: del self.sensors[sensor_id]
-            # a sensor has been added/updated
+        # register/unregister the sensor
+        if message.args.startswith("sensors/"):
+            if message.is_null: 
+                sensor_id = self.unregister_sensor(message)
             else: 
-                # filter in only relevant sensors
-                if "service" not in sensor or sensor["service"]["name"] != self.name or sensor["service"]["mode"] != "passive": return
-                configuration = sensor["service"]["configuration"]
-                if not self.is_valid_configuration(["filter"], configuration): return
-                # keep track of the sensor's configuration
-                self.sensors[sensor_id] = configuration
-                self.log_info("registered sensor "+sensor_id)
+                sensor_id = self.register_sensor(message, ["filter"])
