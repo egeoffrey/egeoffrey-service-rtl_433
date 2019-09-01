@@ -16,7 +16,7 @@ modules:
       placeholder: /usr/local/bin/rtl_433
       required: true
     service_configuration:
-      passive:
+      push:
       - description: Filter in provided data in a key1=value1&key2=value2 format
         format: string
         name: filter
@@ -27,6 +27,6 @@ modules:
         name: measure
         required: false
 package: egeoffrey-service-rtl_433
-revision: 11
+revision: 12
 tags: service rtl_433 rtl_sdr
 version: 1.0
