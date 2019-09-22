@@ -66,4 +66,4 @@ service rtl_433 rtl_sdr
 
 ## Version
 
-The version of this egeoffrey-service-rtl_433 is 1.0-13 on the development branch.
+The version of this egeoffrey-service-rtl_433 is 1.0-14 on the master branch.
