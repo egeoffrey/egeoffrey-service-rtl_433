@@ -1,0 +1,2 @@
+command: /usr/local/bin/rtl_433
+arguments: -F json -U
