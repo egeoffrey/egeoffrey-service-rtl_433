@@ -31,12 +31,11 @@ import sdk.python.utils.exceptions as exception
 class Rtl_433(Service):
     # What to do when initializing
     def on_init(self):
-        # constants
-        self.command_arguments = "-F json -U"
         # map sensor_id with service's configuration
         self.sensors = {}
         # require configuration before starting up
-        self.config_schema = 1
+        self.config = {}
+        self.config_schema = 2
         self.add_configuration_listener("house", 1, True)
         self.add_configuration_listener(self.fullname, "+", True)
         
@@ -47,7 +46,7 @@ class Rtl_433(Service):
         # kill rtl_433 if running
         sdk.python.utils.command.run("killall rtl_433")
         # run rtl_433 and handle the output
-        command = self.config['command']+" "+self.command_arguments
+        command = self.config['command']+" "+self.config['arguments']
         self.log_debug("running command "+command)
         process = subprocess.Popen(shlex.split(command), stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
         prev_output = ""
@@ -114,9 +113,16 @@ class Rtl_433(Service):
     def on_configuration(self,message):
         # module's configuration
         if message.args == self.fullname and not message.is_null:
+            # upgrade the config schema
+            if message.config_schema == 1:
+                config = message.get_data()
+                config["arguments"] = "-F json -U"
+                self.upgrade_config(message.args, message.config_schema, 2, config)
+                return False
             if message.config_schema != self.config_schema: 
                 return False
-            if not self.is_valid_configuration(["command"], message.get_data()): return False
+            # ensure the configuration file contains all required settings
+            if not self.is_valid_configuration(["command", "arguments"], message.get_data()): return False
             self.config = message.get_data()
         # register/unregister the sensor
         if message.args.startswith("sensors/"):

@@ -12,8 +12,13 @@ modules:
     module_configuration:
     - description: The command for running rtl_433 executable
       format: string
-      name: port_listen
+      name: command
       placeholder: /usr/local/bin/rtl_433
+      required: true
+    - description: The arguments for running the rtl_433 command
+      format: string
+      name: arguments
+      placeholder: -F json -U
       required: true
     service_configuration:
       push:
@@ -27,6 +32,6 @@ modules:
         name: measure
         required: false
 package: egeoffrey-service-rtl_433
-revision: 15
+revision: 16
 tags: service rtl_433 rtl_sdr
 version: 1.0

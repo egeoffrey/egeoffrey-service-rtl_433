@@ -23,7 +23,8 @@ For each module, if requiring a configuration file to start, its settings will b
 To configure each module included in this package, once started, click on the *'Edit Configuration'* button on the *'eGeoffrey Admin'* / *'Modules'* page of your eGeoffrey instance.
 - **service/rtl_433**: interact with an attached RTL-SDR device
   - Module configuration:
-    - *port_listen**: the command for running rtl_433 executable (e.g. /usr/local/bin/rtl_433)
+    - *command**: the command for running rtl_433 executable (e.g. /usr/local/bin/rtl_433)
+    - *arguments**: the arguments for running the rtl_433 command (e.g. -F json -U)
   - Service configuration:
     - Mode 'push':
       - *filter*: filter in provided data in a key1=value1&key2=value2 format (e.g. model=Generic Sensor&id=3d c1 5c)
@@ -66,4 +67,4 @@ service rtl_433 rtl_sdr
 
 ## Version
 
-The version of this egeoffrey-service-rtl_433 is 1.0-15 on the master branch.
+The version of this egeoffrey-service-rtl_433 is 1.0-16 on the master branch.
