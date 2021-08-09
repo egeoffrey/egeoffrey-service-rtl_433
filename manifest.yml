@@ -32,6 +32,6 @@ modules:
         name: measure
         required: false
 package: egeoffrey-service-rtl_433
-revision: 17
+revision: 1
 tags: service rtl_433 rtl_sdr
-version: 1.0
+version: 1.1
